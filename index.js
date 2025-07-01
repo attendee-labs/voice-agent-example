@@ -20,7 +20,8 @@ const SAMPLE_RATE = 16_000;          // Hz, matches browser input
 // Store agent configuration from form submission
 let agentConfig = {
   prompt: "You are a super duper helpful assistant",
-  greeting: "Hello! I'm your voice assistant. How can I help you today?"
+  greeting: "Hello! I'm your voice assistant. How can I help you today?",
+  model: "aura-2-thalia-en"
 };
 
 // -----------------------------------------------------------------------------
@@ -60,7 +61,7 @@ function createAgent(onAudio) {
           provider: { type: "open_ai", model: "gpt-4o" },
           prompt: agentConfig.prompt,
         },
-        speak:  { provider: { type: "deepgram",  model: "aura-2-thalia-en" } },
+        speak:  { provider: { type: "deepgram",  model: agentConfig.model } },
         greeting: agentConfig.greeting,
       },
     });
@@ -115,17 +116,18 @@ const server = http.createServer((req, res) => {
       // Store agent configuration from form
       agentConfig.prompt = formData.prompt || agentConfig.prompt;
       agentConfig.greeting = formData.greeting || agentConfig.greeting;
-
+      agentConfig.model = formData.model || agentConfig.model;
 
       console.log("Meeting URL:", formData.meetingUrl);
       console.log("WebSocket Tunnel URL:", formData.wsUrl);
       console.log("Agent Prompt:", agentConfig.prompt);
       console.log("Agent Greeting:", agentConfig.greeting);
+      console.log("Agent Model:", agentConfig.model);
 
       // Make API request to attendee
       const attendeeData = JSON.stringify({
         meeting_url: formData.meetingUrl,
-        bot_name: "Attendee Voice Agent Demo",
+        bot_name: "Attendee Voice Agent",
         websocket_settings: {
           audio: {
             url: formData.wsUrl,
@@ -157,7 +159,7 @@ const server = http.createServer((req, res) => {
           if (attendeeRes.statusCode >= 200 && attendeeRes.statusCode < 300) {
             console.log('✅ Bot launch successful:', responseData);
             res.writeHead(200, { "Content-Type": "text/plain" });
-            res.end("Success! The bot will join the meeting within 30 seconds.");
+            res.end("Success! The bot will join the meeting in 30 seconds and start speaking 30 seconds after joining.");
           } else {
             console.error('❌ Bot launch failed:', attendeeRes.statusCode, responseData);
             res.writeHead(500, { "Content-Type": "text/plain" });

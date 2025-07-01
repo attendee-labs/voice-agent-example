@@ -48,6 +48,14 @@
             min-height: 20px;
             font-family: inherit;
         }
+        select {
+            padding: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-family: inherit;
+            background-color: white;
+        }
         textarea {
             min-height: 80px;
             resize: vertical;
@@ -85,13 +93,78 @@
             <input type="text" id="wsUrl" name="wsUrl" required>
             <small>Generate the WebSocket URL with ngrok</small>
             
-            <label for="prompt">AI Assistant Prompt:</label>
+            <label for="prompt">Agent Prompt:</label>
             <textarea id="prompt" name="prompt" required>You are a super duper helpful assistant</textarea>
-            <small>Instructions for how the AI assistant should behave</small>
             
             <label for="greeting">Greeting Message:</label>
             <input type="text" id="greeting" name="greeting" value="Hello! I'm your voice assistant. How can I help you today?" required>
-            <small>The first message the assistant will say when joining</small>
+            
+            <label for="model">Voice Model:</label>
+            <select id="model" name="model" required>
+                <option value="aura-asteria-en">Aura Asteria (EN)</option>
+                <option value="aura-luna-en">Aura Luna (EN)</option>
+                <option value="aura-stella-en">Aura Stella (EN)</option>
+                <option value="aura-athena-en">Aura Athena (EN)</option>
+                <option value="aura-hera-en">Aura Hera (EN)</option>
+                <option value="aura-orion-en">Aura Orion (EN)</option>
+                <option value="aura-arcas-en">Aura Arcas (EN)</option>
+                <option value="aura-perseus-en">Aura Perseus (EN)</option>
+                <option value="aura-angus-en">Aura Angus (EN)</option>
+                <option value="aura-orpheus-en">Aura Orpheus (EN)</option>
+                <option value="aura-helios-en">Aura Helios (EN)</option>
+                <option value="aura-zeus-en">Aura Zeus (EN)</option>
+                <option value="aura-2-amalthea-en">Aura 2 Amalthea (EN)</option>
+                <option value="aura-2-andromeda-en">Aura 2 Andromeda (EN)</option>
+                <option value="aura-2-apollo-en">Aura 2 Apollo (EN)</option>
+                <option value="aura-2-arcas-en">Aura 2 Arcas (EN)</option>
+                <option value="aura-2-aries-en">Aura 2 Aries (EN)</option>
+                <option value="aura-2-asteria-en">Aura 2 Asteria (EN)</option>
+                <option value="aura-2-athena-en">Aura 2 Athena (EN)</option>
+                <option value="aura-2-atlas-en">Aura 2 Atlas (EN)</option>
+                <option value="aura-2-aurora-en">Aura 2 Aurora (EN)</option>
+                <option value="aura-2-callista-en">Aura 2 Callista (EN)</option>
+                <option value="aura-2-cordelia-en">Aura 2 Cordelia (EN)</option>
+                <option value="aura-2-cora-en">Aura 2 Cora (EN)</option>
+                <option value="aura-2-delia-en">Aura 2 Delia (EN)</option>
+                <option value="aura-2-draco-en">Aura 2 Draco (EN)</option>
+                <option value="aura-2-electra-en">Aura 2 Electra (EN)</option>
+                <option value="aura-2-harmonia-en">Aura 2 Harmonia (EN)</option>
+                <option value="aura-2-helena-en">Aura 2 Helena (EN)</option>
+                <option value="aura-2-hera-en">Aura 2 Hera (EN)</option>
+                <option value="aura-2-hermes-en">Aura 2 Hermes (EN)</option>
+                <option value="aura-2-hyperion-en">Aura 2 Hyperion (EN)</option>
+                <option value="aura-2-iris-en">Aura 2 Iris (EN)</option>
+                <option value="aura-2-janus-en">Aura 2 Janus (EN)</option>
+                <option value="aura-2-juno-en">Aura 2 Juno (EN)</option>
+                <option value="aura-2-jupiter-en">Aura 2 Jupiter (EN)</option>
+                <option value="aura-2-luna-en">Aura 2 Luna (EN)</option>
+                <option value="aura-2-mars-en">Aura 2 Mars (EN)</option>
+                <option value="aura-2-minerva-en">Aura 2 Minerva (EN)</option>
+                <option value="aura-2-neptune-en">Aura 2 Neptune (EN)</option>
+                <option value="aura-2-odysseus-en">Aura 2 Odysseus (EN)</option>
+                <option value="aura-2-ophelia-en">Aura 2 Ophelia (EN)</option>
+                <option value="aura-2-orion-en">Aura 2 Orion (EN)</option>
+                <option value="aura-2-orpheus-en">Aura 2 Orpheus (EN)</option>
+                <option value="aura-2-pandora-en">Aura 2 Pandora (EN)</option>
+                <option value="aura-2-phoebe-en">Aura 2 Phoebe (EN)</option>
+                <option value="aura-2-pluto-en">Aura 2 Pluto (EN)</option>
+                <option value="aura-2-saturn-en">Aura 2 Saturn (EN)</option>
+                <option value="aura-2-selene-en">Aura 2 Selene (EN)</option>
+                <option value="aura-2-thalia-en">Aura 2 Thalia (EN)</option>
+                <option value="aura-2-theia-en">Aura 2 Theia (EN)</option>
+                <option value="aura-2-vesta-en">Aura 2 Vesta (EN)</option>
+                <option value="aura-2-zeus-en">Aura 2 Zeus (EN)</option>
+                <option value="aura-2-sirio-es">Aura 2 Sirio (ES)</option>
+                <option value="aura-2-nestor-es">Aura 2 Nestor (ES)</option>
+                <option value="aura-2-carina-es">Aura 2 Carina (ES)</option>
+                <option value="aura-2-celeste-es">Aura 2 Celeste (ES)</option>
+                <option value="aura-2-alvaro-es">Aura 2 Alvaro (ES)</option>
+                <option value="aura-2-diana-es">Aura 2 Diana (ES)</option>
+                <option value="aura-2-aquila-es">Aura 2 Aquila (ES)</option>
+                <option value="aura-2-selena-es">Aura 2 Selena (ES)</option>
+                <option value="aura-2-estrella-es">Aura 2 Estrella (ES)</option>
+                <option value="aura-2-javier-es">Aura 2 Javier (ES)</option>
+            </select>
             
             <button type="submit">Join Meeting</button>
         </form>
