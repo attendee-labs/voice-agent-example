@@ -15,7 +15,8 @@ const path = require("path");
 const { parse } = require("querystring");
 
 const PORT = process.env.PORT || 5005;
-const SAMPLE_RATE = 16_000;          // Hz, matches browser input
+const SAMPLE_RATE = 16_000;
+const ATTENDEE_API_BASE_URL = process.env.ATTENDEE_API_BASE_URL || 'app.attendee.dev';
 
 // Store agent configuration from form submission
 let agentConfig = {
@@ -137,7 +138,7 @@ const server = http.createServer((req, res) => {
       });
 
       const options = {
-        hostname: 'staging.attendee.dev',
+        hostname: ATTENDEE_API_BASE_URL,
         port: 443,
         path: '/api/v1/bots',
         method: 'POST',
