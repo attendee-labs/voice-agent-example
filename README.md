@@ -57,7 +57,7 @@ npm install
    ```
    Forwarding                    https://123abcd.ngrok-free.app -> http://localhost:5005
    ```
-   Copy the HTTPS URL and replace `https://` with `wss://` to get your WebSocket URL (e.g., `wss://123abcd.ngrok-free.app`). You'll need this WebSocket URL for the configuration.
+   Copy the HTTPS URL and replace `https://` with `wss://` to get your WebSocket URL (e.g., `wss://123abcd.ngrok-free.app`). You'll need this WebSocket URL to launch the voice agent.
 
 ### 4. Set Environment Variables
 
