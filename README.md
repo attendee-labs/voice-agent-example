@@ -2,7 +2,7 @@
 
 This demo uses [Attendee's](https://github.com/attendee-labs/attendee) meeting bot API and [Deepgram's Voice Agent API](https://deepgram.com/) to launch a voice agent that joins meetings (Google Meet, Microsoft Teams, Zoom) and participates in conversations in real-time.
 
-See a quick video of how to install and use the app [here](https://drive.google.com/file/d/1wBej1tETa579LkPZ_1ffCPs1a-DvWXkj/view?usp=sharing).
+See a quick video of how to install and use the app [here](https://drive.google.com/file/d/18IyQkPEewdiYepFbPUmDZg9XkwQpbWrp/view?usp=sharing).
 
 ## Features
 
