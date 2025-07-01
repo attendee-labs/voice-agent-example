@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendee Meeting Agent Demo</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 2rem 0;
+        }
+        .container {
+            background: white;
+            padding: 3rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            color: #555;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        input, textarea {
+            padding: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1rem;
+            min-height: 20px;
+            font-family: inherit;
+        }
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        small {
+            color: #666;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            display: block;
+        }
+        button {
+            margin-top: 2rem;
+            padding: 1rem;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Attendee Meeting Agent Demo</h1>
+        <form id="joinForm" action="/join-meeting" method="POST">
+            <label for="meetingUrl">Meeting URL:</label>
+            <input type="url" id="meetingUrl" name="meetingUrl" required>
+            
+            <label for="wsUrl">WebSocket Tunnel URL:</label>
+            <input type="text" id="wsUrl" name="wsUrl" required>
+            <small>Generate the WebSocket URL with ngrok</small>
+            
+            <label for="prompt">AI Assistant Prompt:</label>
+            <textarea id="prompt" name="prompt" required>You are a super duper helpful assistant</textarea>
+            <small>Instructions for how the AI assistant should behave</small>
+            
+            <label for="greeting">Greeting Message:</label>
+            <input type="text" id="greeting" name="greeting" value="Hello! I'm your voice assistant. How can I help you today?" required>
+            <small>The first message the assistant will say when joining</small>
+            
+            <button type="submit">Join Meeting</button>
+        </form>
+    </div>
+    <script>
+        const form = document.getElementById('joinForm');
+        const wsUrlInput = document.getElementById('wsUrl');
+        form.addEventListener('submit', function(event) {
+            const wsUrl = wsUrlInput.value.trim();
+            if (!wsUrl.startsWith('ws://') && !wsUrl.startsWith('wss://')) {
+                alert('WebSocket Tunnel URL must start with ws:// or wss://');
+                event.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html> 
