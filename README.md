@@ -55,9 +55,9 @@ npm install
    
 3. **Copy the WebSocket URL**: Ngrok will display something like:
    ```
-   Forwarding    ws://abc123.ngrok.io -> ws://localhost:5005
+   Forwarding                    https://123abcd.ngrok-free.app -> http://localhost:5005
    ```
-   Copy the `ws://abc123.ngrok.io` URL - you'll need this for the WebSocket tunnel configuration.
+   Copy the HTTPS URL and replace `https://` with `wss://` to get your WebSocket URL (e.g., `wss://123abcd.ngrok-free.app`). You'll need this WebSocket URL for the configuration.
 
 ### 4. Set Environment Variables
 
@@ -82,7 +82,7 @@ The server will start on `http://localhost:5005`.
 
 2. **Configure Your Voice Agent**:
    - **Meeting URL**: Paste a meeting URL from Google Meet, Microsoft Teams, or Zoom
-   - **WebSocket Tunnel URL**: Enter your ngrok WebSocket URL (e.g., `ws://abc123.ngrok.io`)
+   - **WebSocket Tunnel URL**: Enter your ngrok WebSocket URL (e.g., `wss://123abcd.ngrok-free.app`)
    - **Agent Prompt**: Customize the AI assistant's personality and instructions
    - **Greeting Message**: Set what the agent says when it first joins
    - **Voice Model**: Choose from 50+ Deepgram Aura voice options
