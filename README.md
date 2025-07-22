@@ -16,7 +16,7 @@ See a quick video of how to install and use the app [here](https://drive.google.
 
 2. **Ngrok**: Since the voice agent needs bidirectional audio streaming, you'll need [ngrok](https://ngrok.com/) to create a secure WebSocket tunnel to your localhost. Ngrok is free for basic usage.
 
-3. **Node.js 16+**: This demo uses Node.js and requires version 16 or higher.
+3. **Node.js 22.15+**: This demo uses Node.js and requires version 22.15 or higher.
 
 4. **API Keys**: You'll need:
    - An Attendee API key from your Attendee dashboard
