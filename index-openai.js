@@ -23,6 +23,11 @@ const SAMPLE_RATE = 24_000;
 const ATTENDEE_API_BASE_URL =
   process.env.ATTENDEE_API_BASE_URL || "app.attendee.dev";
 
+const FRAME_MS = 20;
+const BYTES_PER_SAMPLE = 2;
+const FRAME_BYTES = (SAMPLE_RATE * BYTES_PER_SAMPLE * FRAME_MS) / 1000;
+const MIN_START_BUFFER_MS = 120; // avoid stutter on jitter
+
 // Store agent configuration from form submission
 let agentConfig = {
   prompt: "You are a super duper helpful assistant",
@@ -50,95 +55,138 @@ if (!ATTENDEE_API_KEY) {
 // -----------------------------------------------------------------------------
 // Helper: spin up a fresh OpenAI Realtime connection
 // -----------------------------------------------------------------------------
-function createRealtimeAgent(onAudio) {
-  // You can choose the realtime model; keep a sane default
-  const model =
-    process.env.OPENAI_REALTIME_MODEL ||
-    "gpt-4o-realtime-preview-2024-12-17";
+function createRealtimeAgent(onDripToClient) {
+  const model = process.env.OPENAI_REALTIME_MODEL || "gpt-4o-realtime-preview-2024-12-17";
+  const rt = new OpenAIRealtimeWebSocket({ apiKey: process.env.OPENAI_API_KEY, model });
 
-  const rt = new OpenAIRealtimeWebSocket({
-    apiKey: OPENAI_KEY,
-    model,
-  });
+  // --- Drip-feed state ---
+  let outBuf = Buffer.alloc(0);
+  let pacer = null;
+  let assistantSpeaking = false;
+  let currentAssistantItemId = null;
+  let playedMs = 0;
 
+  const startPacer = () => {
+    if (pacer) return;
+    pacer = setInterval(() => {
+      // only start sending once we have a small safety buffer
+      const minBytesToStart = Math.max(FRAME_BYTES, (SAMPLE_RATE * BYTES_PER_SAMPLE * MIN_START_BUFFER_MS) / 1000);
+      if (outBuf.length < minBytesToStart && !assistantSpeaking) return;
+
+      if (outBuf.length >= FRAME_BYTES) {
+        const frame = outBuf.subarray(0, FRAME_BYTES);
+        outBuf = outBuf.subarray(FRAME_BYTES);
+        playedMs += FRAME_MS;
+
+        // Set assistantSpeaking to true when we start actually sending frames
+        if (!assistantSpeaking) {
+          assistantSpeaking = true;
+        }
+
+        // drip a single frame to the browser/attendee bot
+        onDripToClient(frame);
+      }
+      // stop pacing once we've drained the buffer
+      if (outBuf.length < FRAME_BYTES && assistantSpeaking) {
+        console.log("Pacer stopping - buffer drained");
+        assistantSpeaking = false;
+        clearInterval(pacer);
+        pacer = null;
+      }
+    }, FRAME_MS);
+  };
+
+  const flushOutput = () => {
+    outBuf = Buffer.alloc(0);
+    playedMs = 0;
+  };
+
+  const cancelAndTruncate = () => {
+    // Stop model generation
+    console.log("Cancelling and truncating");
+    rt.send({ type: "response.cancel" }); // server replies with response.cancelled or similar
+    // Trim the assistant item to exactly what we've already played
+    if (currentAssistantItemId != null) {
+      rt.send({
+        type: "conversation.item.truncate",
+        item_id: currentAssistantItemId,
+        content_index: 0,
+        audio_end_ms: Math.max(0, Math.floor(playedMs)),
+      });
+    }
+    flushOutput();
+    assistantSpeaking = false;
+  };
+
+  // --- Session configuration
   rt.on("open", () => {
-    console.log("🟢  OpenAI Realtime WebSocket opened");
-
-    // Configure the session once the socket is up
     rt.send({
       type: "session.update",
       session: {
-        // Enable both text and audio
         modalities: ["text", "audio"],
-        // Your "system" instructions
-        instructions: agentConfig.prompt,
-        // Raw PCM16 in/out at 16 kHz
+        instructions: /* system prompt */ agentConfig.prompt,
         input_audio_format: "pcm16",
         output_audio_format: "pcm16",
-        // Server VAD: auto-commit and auto-response on speech
-        turn_detection: {
-          type: "server_vad",
-          // These are decent starting values; tune as needed
-          threshold: 0.5,
-          prefix_padding_ms: 150,
-          silence_duration_ms: 250,
-        },
-        // Voice for TTS (examples: 'verse', 'alloy', 'aria')
         voice: agentConfig.model || "verse",
+        turn_detection: { type: "server_vad", threshold: 0.5, prefix_padding_ms: 150, silence_duration_ms: 250 },
       },
     });
 
-    // Optional greeting at connect
     if (agentConfig.greeting) {
       rt.send({
         type: "response.create",
-        response: {
-          // Ask the model to speak the greeting as the first turn
-          instructions: agentConfig.greeting,
-          modalities: ["audio"],
-          audio: { voice: agentConfig.model || "verse" },
-        },
+        response: { modalities: ["audio"], instructions: agentConfig.greeting, audio: { voice: agentConfig.model || "verse" } },
       });
     }
   });
 
-  // Stream model audio back to browser
-  rt.on("response.audio.delta", (event) => {
-    const buffer = Buffer.from(event.delta, "base64");
-    onAudio(buffer);
+  // --- Track the current assistant item we are playing
+  rt.on("response.output_item.added", (e) => {
+    const item = e.item; // contains item.id, role, type, etc.
+    if (item?.type === "message" && item?.role === "assistant") {
+      currentAssistantItemId = item.id;
+      // Don't set assistantSpeaking here - let the pacer handle it
+      playedMs = 0;
+      startPacer();
+    }
   });
 
-  // (Optional) tap into transcripts & text deltas for logs/UX
-  rt.on("response.audio_transcript.delta", (e) =>
-    console.log("📝 [RT] transcript Δ:", e.delta)
-  );
-  rt.on("response.text.delta", (e) =>
-    process.stdout.write(`💬 [RT] ${e.delta}`)
-  );
+  // --- Stream model audio to our drip buffer
+  rt.on("response.audio.delta", (e) => {
+    const chunk = Buffer.from(e.delta, "base64");
+    outBuf = Buffer.concat([outBuf, chunk]);
+    startPacer(); // ensure pacer is running
+  });
+
+  // Assistant item finished (naturally or after cancel)
+  rt.on("response.output_item.done", () => {
+    console.log("Assistant item done");
+    // Don't set assistantSpeaking to false here - let the pacer finish draining
+    // assistantSpeaking will be set to false when pacer stops
+    // pacer stops itself once buffer drains
+  });
+
+  // If server VAD detects user started speaking ⇒ barge-in
+  rt.on("input_audio_buffer.speech_started", () => {
+    console.log("User started speaking according to server VAD assistantSpeaking=", assistantSpeaking);
+    if (assistantSpeaking) cancelAndTruncate();
+  });
 
   rt.on("error", (err) => console.error("OpenAI Realtime error:", err));
   rt.on("close", () => console.log("🔌 OpenAI Realtime closed"));
-  rt.on("session.created", (e) =>
-    console.log("🙌 [RT] session created:", e.session?.id || "")
-  );
 
-  // Expose a simple adapter that mirrors your original usage
   return {
-    // Append raw PCM16 mono 16k chunks (base64 handled below)
+    // Append raw PCM16 @ 16 kHz from your browser/attendee
     send(audioBuffer) {
-      rt.send({
-        type: "input_audio_buffer.append",
-        audio: audioBuffer.toString("base64"),
-      });
-      // With server_vad, no need to commit or create response manually:
-      // the server will commit and generate responses automatically.  :contentReference[oaicite:3]{index=3}
+      rt.send({ type: "input_audio_buffer.append", audio: audioBuffer.toString("base64") });
+      // With server_vad, the server commits & generates automatically. :contentReference[oaicite:5]{index=5}
+    },
+    // Let the WS layer call this if it sees user speech locally, too.
+    interrupt() {
+      if (assistantSpeaking) cancelAndTruncate();
     },
     finish() {
-      try {
-        rt.close();
-      } catch (e) {
-        /* noop */
-      }
+      try { rt.close(); } catch {}
     },
   };
 }
