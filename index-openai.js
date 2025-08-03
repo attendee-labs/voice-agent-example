@@ -119,7 +119,8 @@ function createRealtimeAgent(onDripToClient) {
   };
 
   // --- Session configuration
-  rt.on("open", () => {
+  rt.socket.addEventListener("open", () => {
+    console.log("Session open");
     rt.send({
       type: "session.update",
       session: {
@@ -133,9 +134,10 @@ function createRealtimeAgent(onDripToClient) {
     });
 
     if (agentConfig.greeting) {
+      console.log("Sending greeting");
       rt.send({
         type: "response.create",
-        response: { modalities: ["audio"], instructions: agentConfig.greeting, audio: { voice: agentConfig.model || "verse" } },
+        response: { modalities: ['audio', 'text'], instructions: agentConfig.greeting },
       });
     }
   });
