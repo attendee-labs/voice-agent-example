@@ -18,15 +18,6 @@ const PORT = process.env.PORT || 5005;
 const SAMPLE_RATE = 16_000;
 const ATTENDEE_API_BASE_URL = process.env.ATTENDEE_API_BASE_URL || "app.attendee.dev";
 
-// Store agent configuration from form submission
-let agentConfig = {
-  prompt: "You are a super duper helpful assistant",
-  greeting: "Hello! I'm your voice assistant. How can I help you today?",
-  // NOTE: In Vapi we usually set the TTS voice on the Assistant itself.
-  // Leaving this here for compatibility; we don't override TTS in the call by default.
-  model: "aura-2-thalia-en",
-};
-
 // -----------------------------------------------------------------------------
 // Sanity-check API keys
 // -----------------------------------------------------------------------------
@@ -111,7 +102,7 @@ function createVapiAgent(onAudio) {
         ready = true;
         console.log("🟢  Vapi WebSocket opened", wsUrl);
         // Flush any queued audio
-        //while (outbox.length) vapiSocket.send(outbox.shift());
+        while (outbox.length) vapiSocket.send(outbox.shift());
 
         // Optional keepalive
         const keepAlive = setInterval(() => {
@@ -126,9 +117,10 @@ function createVapiAgent(onAudio) {
       vapiSocket.on("message", (data, isBinary) => {
         console.log("📨  [Vapi] Message. Data length:", data.length);
         if (isBinary || Buffer.isBuffer(data)) {
-          // Split the audio into 640 byte chunks
+          // Not sure why this is necessary, but if you don't filter out anything
+          // other than 640 byte chunks, there will be static in the audio.
           if (data.length == 640)
-          onAudio(Buffer.from(data));
+            onAudio(Buffer.from(data));
         } else {
           // Text frames are control/status JSON
           try {
@@ -185,16 +177,8 @@ const server = http.createServer((req, res) => {
     req.on("end", () => {
       const formData = parse(body);
 
-      // Store agent configuration from form
-      agentConfig.prompt = formData.prompt || agentConfig.prompt;
-      agentConfig.greeting = formData.greeting || agentConfig.greeting;
-      agentConfig.model = formData.model || agentConfig.model;
-
       console.log("Meeting URL:", formData.meetingUrl);
       console.log("WebSocket Tunnel URL:", formData.wsUrl);
-      console.log("Agent Prompt:", agentConfig.prompt);
-      console.log("Agent Greeting:", agentConfig.greeting);
-      console.log("Agent Model:", agentConfig.model);
 
       // Make API request to attendee
       const attendeeData = JSON.stringify({
@@ -267,7 +251,7 @@ server.listen(PORT, () => {
 wss.on("connection", (client, req) => {
   console.log(`⇦  Browser connected from ${req.socket.remoteAddress}`);
 
-  // Create Vapi agent and wire audio → browser using stored configuration
+  // Create Vapi agent and wire audio → browser
   const agent = createVapiAgent((buffer) => {
     const payload = {
       trigger: "realtime_audio.bot_output",
